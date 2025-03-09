@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TastyGo - Food Delivery</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- Load application scripts first -->
+  <script src="env.js"></script>
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+  <!-- Load Google Maps API with proper async loading and error handling -->
+  <script>
+    // Function to check if API key is properly configured
+    function checkApiKey() {
+      if (!window.env || !window.env.GOOGLE_MAPS_API_KEY || 
+          window.env.GOOGLE_MAPS_API_KEY === 'YOUR_GOOGLE_MAPS_API_KEY') {
+        const mapContainer = document.getElementById('map');
+        if (mapContainer) {
+          mapContainer.innerHTML = `
+            <div style="padding: 20px; text-align: center; background: #f8f9fa; border-radius: 8px;">
+              <h3 style="color: #dc3545;">⚠️ API Key Not Configured</h3>
+              <p>Please follow these steps:</p>
+              <ol style="text-align: left; max-width: 400px; margin: 20px auto;">
+                <li>Copy env.example.js to env.js</li>
+                <li>Get an API key from Google Cloud Console</li>
+                <li>Add your API key to env.js</li>
+                <li>Enable required APIs in Google Cloud Console</li>
+                <li>Add your domain to API key restrictions</li>
+              </ol>
+              <p style="font-size: 0.8em; color: #666;">
+                See README.md for detailed instructions
+              </p>
+            </div>
+          `;
+        }
+        console.error('Google Maps API key not properly configured. Check env.js file.');
+        return false;
+      }
+      return true;
+    }
+
+    // Function to load Google Maps API
+    function loadGoogleMapsScript() {
+      if (!checkApiKey()) return;
+
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${window.env.GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap&v=weekly`;
+      script.async = true;
+      script.defer = true;
+      script.onerror = function() {
+        console.error('Failed to load Google Maps API. Check your API key and restrictions.');
+        gm_authFailure();
+      };
+      document.head.appendChild(script);
+    }
+
+    function initMap() {
+      if (typeof initializeMap === 'function') {
+        initializeMap();
+      }
+    }
+
+    // Handle Google Maps API loading errors
+    function gm_authFailure() {
+      console.error('Google Maps authentication failed. Please check your API key configuration.');
+      const mapContainer = document.getElementById('map');
+      if (mapContainer) {
+        mapContainer.innerHTML = `
+          <div style="padding: 20px; text-align: center; background: #f8f9fa; border-radius: 8px;">
+            <h3 style="color: #dc3545;">🚫 Authentication Failed</h3>
+            <p>Please check:</p>
+            <ul style="text-align: left; max-width: 400px; margin: 20px auto;">
+              <li>Your API key is correct in env.js</li>
+              <li>Required APIs are enabled in Google Cloud Console</li>
+              <li>Your domain is allowed in API key restrictions</li>
+              <li>For local development, ensure these URLs are allowed:
+                <code>http://localhost:5500/*</code> and <code>http://127.0.0.1:5500/*</code>
+              </li>
+            </ul>
+            <p style="font-size: 0.8em; color: #666;">
+              See README.md for troubleshooting steps
+            </p>
+          </div>
+        `;
+      }
+    }
+
+    // Load the script when the page is ready
+    document.addEventListener('DOMContentLoaded', loadGoogleMapsScript);
+  </script>
+</head>
+<body>
+<!-- Login Page -->
+<div id="login-page">
+  <div class="form-container">
+    <h2>Welcome to TastyGo</h2>
+    <form id="login-form" onsubmit="directLogin(event)">
+      <label for="username">Username</label> 
+      <input type="text" id="username" name="username" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
+
+      <div class="remember-me">
+        <input type="checkbox" id="remember-me" name="remember-me">
+        <label for="remember-me">Remember me</label>
+      </div>
+
+      <button type="submit">Login</button>
+      <button type="button" onclick="showRegistrationPage()">Create Account</button>
+    </form>
+  </div>
+</div>
+
+<!-- Registration Page -->
+<div id="registration-page" class="form-container">
+  <h2>Create Account</h2>
+  <form id="registration-form" onsubmit="event.preventDefault(); registerUser();">
+    <label for="reg-username">Username</label>
+    <input type="text" id="reg-username" name="username" required>
+
+    <label for="reg-email">Email</label>
+    <input type="email" id="reg-email" name="email" required>
+
+    <label for="reg-password">Password</label>
+    <input type="password" id="reg-password" name="password" required>
+    <div id="password-strength" class="password-strength"></div>
+
+    <button type="submit">Register</button>
+    <button type="button" onclick="showLogin()">Back to Login</button>
+  </form>
+</div>
+
+<!-- User Dashboard -->
+<div id="user-dashboard" style="display:none;">
+  <header class="main-header">
+    <div class="header-content">
+      <h1>TastyGo</h1>
+      <div class="location-picker">
+        <i class="fas fa-map-marker-alt"></i>
+        <select id="delivery-time">
+          <option>Deliver now</option>
+          <option>Schedule for later</option>
+        </select>
+        <span id="selected-address-display">Select delivery address</span>
+      </div>
+      <div class="header-actions">
+        <button id="main-cart-btn" onclick="showCart()">
+          <i class="fas fa-shopping-cart"></i>
+          <span>Cart</span>
+          <span id="cart-count">0</span>
+        </button>
+        <div class="settings-dropdown">
+          <button id="settings-btn">
+            <i class="fas fa-cog"></i>
+          </button>
+          <div class="settings-content">
+            <button onclick="showTabLocal('orders')">Orders</button>
+            <button onclick="showTabLocal('addresses')">Manage Addresses</button>
+            <button onclick="logoutUser()">Logout</button>
+          </div>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1>Feeling Hungry? TastyGo is here!</h1>
+      <div class="search-container">
+        <input type="text" id="search-bar" placeholder="Search for restaurants or cuisines">
+        <button class="search-btn"><i class="fas fa-search"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filter-chips">
+      <button class="filter-chip active" onclick="filterRestaurants('All')">All</button>
+      <button class="filter-chip" onclick="filterRestaurants('Fast Food')">Fast Food</button>
+      <button class="filter-chip" onclick="filterRestaurants('Italian')">Italian</button>
+      <button class="filter-chip" onclick="filterRestaurants('Japanese')">Japanese</button>
+      <button class="filter-chip" onclick="filterRestaurants('Asian')">Asian</button>
+      <button class="filter-chip" onclick="filterRestaurants('American')">American</button>
+    </div>
+    <div class="sort-options">
+      <select onchange="sortRestaurants(this.value)">
+        <option value="rating">Sort by Rating</option>
+        <option value="deliveryTime">Sort by Delivery Time</option>
+        <option value="price">Sort by Price</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Tab navigation -->
+  <div class="tabs">
+    <button id="restaurants-tab" class="active" onclick="showTabLocal('restaurants')">Restaurants</button>
+    <button id="favorites-tab" onclick="showTabLocal('favorites')">Favorites</button>
+  </div>
+
+  <!-- Restaurant Listings -->
+  <section id="restaurants" class="tab-content active">
+    <div id="restaurant-list" class="restaurant-list"></div>
+  </section>
+
+  <!-- Address Management -->
+  <section id="addresses" class="tab-content">
+    <h2>Manage Addresses</h2>
+    <div class="address-management">
+    <form id="address-form" onsubmit="event.preventDefault(); addAddress();">
+      <div class="add-address-container">
+        <input type="text" id="address" placeholder="Enter your delivery address" required>
+          <button type="submit" id="add-address-btn" class="button-85" role="button">Add Address</button>
+      </div>
+    </form>
+      <div id="map" style="height: 400px; width: 100%; margin: 20px 0; border-radius: 8px;"></div>
+    <ul id="address-list"></ul>
+    </div>
+  </section>
+
+  <!-- Orders Section -->
+  <section id="orders" class="tab-content">
+    <div class="orders-container">
+      <h2>Your Orders</h2>
+      <div class="order-filters">
+        <button class="filter-btn active" onclick="filterOrders('all')">All Orders</button>
+        <button class="filter-btn" onclick="filterOrders('active')">Active Orders</button>
+        <button class="filter-btn" onclick="filterOrders('past')">Past Orders</button>
+      </div>
+      <div id="active-orders"></div>
+      <div id="order-history"></div>
+    </div>
+  </section>
+
+  <!-- Favorites Section -->
+  <section id="favorites" class="tab-content">
+    <div class="favorites-container">
+      <h2>Your Favorite Restaurants</h2>
+      <div id="favorites-list" class="restaurant-list"></div>
+    </div>
+  </section>
+
+  <!-- Checkout Section -->
+  <div id="checkout-modal" class="checkout-modal" style="display: none;">
+    <div class="checkout-content">
+      <div class="checkout-header">
+        <h2>Checkout</h2>
+        <button onclick="closeCheckout()" class="close-checkout-btn">&times;</button>
+      </div>
+      <div class="checkout-body">
+        <div class="delivery-info">
+          <h3>Delivery Details</h3>
+          <p id="checkout-address"></p>
+          <p id="estimated-time"></p>
+        </div>
+        <div class="order-summary">
+          <h3>Order Summary</h3>
+          <div id="checkout-items"></div>
+        </div>
+        <div class="promo-code">
+          <h3>Promo Code</h3>
+          <div class="promo-input">
+            <input type="text" id="promo-code" placeholder="Enter promo code">
+            <button onclick="applyPromoCode()">Apply</button>
+          </div>
+        </div>
+        <div class="special-instructions">
+          <h3>Special Instructions</h3>
+          <textarea id="order-instructions" placeholder="Add any special instructions for your order..."></textarea>
+        </div>
+        <div class="payment-section">
+          <h3>Payment Method</h3>
+          <div class="payment-options">
+            <label class="payment-option">
+              <input type="radio" name="payment" value="card" checked>
+              Credit/Debit Card
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="payment" value="cash">
+              Cash on Delivery
+            </label>
+          </div>
+          <div id="card-details">
+            <input type="text" class="card-input" placeholder="Card Number">
+            <div class="card-extra">
+              <input type="text" class="card-input small" placeholder="MM/YY">
+              <input type="text" class="card-input small" placeholder="CVV">
+            </div>
+          </div>
+        </div>
+        <button onclick="processOrder()" class="place-order-btn">Place Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Tracking Modal -->
+  <div id="tracking-modal" class="tracking-modal" style="display: none;">
+    <div class="tracking-content">
+      <div class="tracking-header">
+        <h2>Track Your Order</h2>
+        <button onclick="closeTracking()" class="close-tracking-btn">&times;</button>
+      </div>
+      <div class="tracking-body">
+        <div class="tracking-status">
+          <div class="status-steps">
+            <div class="status-step active">
+              <div class="step-icon">✓</div>
+              <div class="step-text">Order Confirmed</div>
+            </div>
+            <div class="status-step">
+              <div class="step-icon">🍳</div>
+              <div class="step-text">Preparing</div>
+            </div>
+            <div class="status-step">
+              <div class="step-icon">🚗</div>
+              <div class="step-text">On the Way</div>
+            </div>
+            <div class="status-step">
+              <div class="step-icon">📍</div>
+              <div class="step-text">Delivered</div>
+            </div>
+          </div>
+        </div>
+        <div class="delivery-details">
+          <div class="estimated-time">
+            <h3>Estimated Delivery Time</h3>
+            <p id="tracking-eta">Calculating...</p>
+          </div>
+          <div class="delivery-address">
+            <h3>Delivery Address</h3>
+            <p id="tracking-address"></p>
+          </div>
+          <div class="order-details">
+            <h3>Order Details</h3>
+            <div id="tracking-items"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>&copy; 2025 Food Application</p>
+</footer>
+
+<!-- GitHub Pages Notice -->
+<div id="github-pages-notice" style="display: none; background-color: #f8d7da; color: #721c24; padding: 10px; margin: 10px; border-radius: 5px; text-align: center;">
+  <p>Note: This is a static demo running on GitHub Pages. Server-side features like user authentication and order processing are simulated.</p>
+  <button onclick="this.parentElement.style.display='none'" style="background-color: #721c24; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Dismiss</button>
+</div>
+
+<script>
+  // Show GitHub Pages notice if running on GitHub Pages
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.APP_CONFIG && window.APP_CONFIG.isGitHubPages) {
+      document.getElementById('github-pages-notice').style.display = 'block';
+    }
+    
+    // Initialize cart
+    initializeCart();
+    
+    // Initialize favorites array in localStorage if it doesn't exist
+    if (!localStorage.getItem('favorites')) {
+      localStorage.setItem('favorites', JSON.stringify([]));
+    }
+  });
+  
+  // Check if user is already logged in
+  function checkLoginStatus() {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const userData = localStorage.getItem('currentUser');
+    
+    if (isLoggedIn && userData) {
+      try {
+        // Parse user data
+        const user = JSON.parse(userData);
+        window.currentUser = user;
+        
+        // Hide login page, show dashboard
+        document.getElementById('login-page').style.display = 'none';
+        document.getElementById('user-dashboard').style.display = 'block';
+        
+        // Initialize dashboard
+        if (typeof loadSavedData === 'function') {
+          loadSavedData();
+        }
+        
+        // Show the restaurants tab
+        if (typeof showTab === 'function') {
+          showTab('restaurants');
+        } else {
+          showTabLocal('restaurants');
+        }
+        
+        // Display restaurants
+        if (typeof displayRestaurants === 'function') {
+          displayRestaurants();
+        } else {
+          displayRestaurantsLocal();
+        }
+        
+        // Set up event listeners for buttons
+        setupEventListeners();
+        
+        console.log('User already logged in:', user);
+      } catch (error) {
+        console.error('Error restoring login session:', error);
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('currentUser');
+      }
+    }
+  }
+  
+  // Show registration page
+  function showRegistrationPage() {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('registration-page').style.display = 'flex';
+  }
+
+  // Show login page
+  function showLogin() {
+    document.getElementById('registration-page').style.display = 'none';
+    document.getElementById('login-page').style.display = 'flex';
+  }
+
+  // Register user function
+  function registerUser() {
+    const username = document.getElementById('reg-username').value;
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-password').value;
+
+    if (!username || !email || !password) {
+      showToast('Please fill in all fields');
+      return;
+    }
+
+    // Get existing users or initialize empty array
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+
+    // Check if username already exists
+    if (users.some(user => user.username === username)) {
+      showToast('Username already exists');
+      return;
+    }
+
+    // Create new user
+    const newUser = {
+      id: Date.now().toString(),
+      username: username,
+      email: email,
+      password: password // In a real app, this should be hashed
+    };
+
+    // Add to users array
+    users.push(newUser);
+    localStorage.setItem('users', JSON.stringify(users));
+
+    // Show success message
+    showToast('Registration successful! Please login.');
+    
+    // Clear form
+    document.getElementById('reg-username').value = '';
+    document.getElementById('reg-email').value = '';
+    document.getElementById('reg-password').value = '';
+
+    // Show login page
+    showLogin();
+  }
+
+  // Direct login function
+  function directLogin(event) {
+    if (event) {
+      event.preventDefault();
+    }
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    if (!username || !password) {
+      showToast('Please enter both username and password');
+      return;
+    }
+
+    // Get users from localStorage
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+
+    // Find user
+    const user = users.find(u => u.username === username && u.password === password);
+
+    if (!user) {
+      showToast('Invalid username or password');
+      return;
+    }
+
+    // Store user in localStorage
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    localStorage.setItem('isLoggedIn', 'true');
+
+    // Initialize cart if not exists
+    if (!localStorage.getItem('cart')) {
+      localStorage.setItem('cart', JSON.stringify({
+        items: [],
+        restaurant: null,
+        subtotal: 0,
+        deliveryFee: 0,
+        total: 0
+      }));
+    }
+
+    // Hide login page, show dashboard
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('user-dashboard').style.display = 'block';
+
+    // Initialize dashboard
+    window.currentUser = user;
+    showTabLocal('restaurants');
+    displayRestaurantsLocal(sampleRestaurants);
+    setupEventListeners();
+
+    showToast('Welcome back, ' + user.username + '!');
+  }
+
+  // Set up event listeners for buttons
+  function setupEventListeners() {
+    // Main cart button
+    const mainCartBtn = document.getElementById('main-cart-btn');
+    if (mainCartBtn) {
+      mainCartBtn.onclick = function() {
+        if (typeof showCart === 'function') {
+          showCart();
+        }
+      };
+    }
+    
+    // Settings button
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) {
+      settingsBtn.onclick = function(e) {
+        e.stopPropagation();
+        const settingsContent = document.querySelector('.settings-content');
+        if (settingsContent) {
+          settingsContent.style.display = settingsContent.style.display === 'block' ? 'none' : 'block';
+        }
+      };
+    }
+    
+    // Logout button
+    const logoutBtn = document.getElementById('main-logout-btn');
+    if (logoutBtn) {
+      logoutBtn.onclick = function() {
+        logoutUser();
+      };
+    }
+    
+    // Tab buttons
+    const tabButtons = document.querySelectorAll('.tabs button');
+    tabButtons.forEach(button => {
+      button.onclick = function() {
+        const tabName = this.id.replace('-tab', '');
+        showTabLocal(tabName);
+      };
+    });
+    
+    // Close settings dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      const settingsContent = document.querySelector('.settings-content');
+      if (settingsContent && settingsContent.style.display === 'block') {
+        if (!e.target.closest('.settings-dropdown')) {
+          settingsContent.style.display = 'none';
+        }
+      }
+    });
+  }
+  
+  // Local showTab function
+  function showTabLocal(tabName) {
+    console.log('Showing tab locally:', tabName);
+    
+    // Hide all tabs
+    const tabs = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+      tab.classList.remove('active');
+      tab.style.display = 'none';
+    });
+    
+    // Remove active class from all tab buttons
+    const tabButtons = document.querySelectorAll('.tabs button');
+    tabButtons.forEach(button => {
+      button.classList.remove('active');
+    });
+    
+    // Show selected tab
+    const selectedTab = document.getElementById(tabName);
+    if (selectedTab) {
+      selectedTab.classList.add('active');
+      selectedTab.style.display = 'block';
+      
+      // Add active class to tab button
+      const tabButton = document.getElementById(`${tabName}-tab`);
+      if (tabButton) {
+        tabButton.classList.add('active');
+      }
+      
+      // Special handling for different tabs
+      switch(tabName) {
+        case 'restaurants':
+          displayRestaurantsLocal(sampleRestaurants);
+          break;
+        case 'favorites':
+          showFavoritesLocal();
+          break;
+        case 'orders':
+          if (typeof filterOrders === 'function') {
+            filterOrders('all');
+          }
+          break;
+        case 'addresses':
+          if (typeof loadAddresses === 'function') {
+            loadAddresses();
+          } else {
+            initializeMap();
+          }
+          break;
+      }
+    }
+  }
+  
+  // Logout user
+  function logoutUser() {
+    // Clear user data from localStorage
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('isLoggedIn');
+    
+    // Reset current user
+    window.currentUser = null;
+    
+    // Show login page, hide dashboard
+    document.getElementById('login-page').style.display = 'block';
+    document.getElementById('user-dashboard').style.display = 'none';
+    
+    console.log('User logged out');
+  }
+
+  // Sample restaurant data with menus
+  const sampleRestaurants = [
+    {
+      id: 1,
+      name: "Burger Palace",
+      cuisine: "Fast Food",
+      price: "$$",
+      logo: "https://cdn-icons-png.flaticon.com/512/3075/3075977.png",
+      rating: 4.5,
+      deliveryTime: "15-25 min",
+      deliveryFee: "$2.99",
+      minOrder: 10,
+      tags: ["Burgers", "Fast Food", "American"],
+      featured: true,
+      promoCode: "BURGER20",
+      discount: "20% off on orders above $30",
+      menu: {
+        "Popular Items": [
+          {
+            id: "bp1",
+            name: "Classic Cheeseburger",
+            description: "100% Angus beef patty with cheddar cheese, lettuce, tomato, and special sauce",
+            price: 8.99,
+            image: "https://cdn-icons-png.flaticon.com/512/877/877951.png",
+            options: [
+              {
+                name: "Size",
+                required: true,
+                choices: [
+                  { name: "Regular", price: 0 },
+                  { name: "Double Patty", price: 3.50 }
+                ]
+              },
+              {
+                name: "Add-ons",
+                required: false,
+                choices: [
+                  { name: "Bacon", price: 1.50 },
+                  { name: "Extra Cheese", price: 1.00 },
+                  { name: "Avocado", price: 2.00 }
+                ]
+              }
+            ]
+          },
+          {
+            id: "bp2",
+            name: "Crispy Chicken Sandwich",
+            description: "Crispy fried chicken breast with pickles and house mayo",
+            price: 7.99,
+            image: "https://cdn-icons-png.flaticon.com/512/2515/2515263.png",
+            options: [
+              {
+                name: "Spice Level",
+                required: true,
+                choices: [
+                  { name: "Regular", price: 0 },
+                  { name: "Spicy", price: 0 }
+                ]
+              }
+            ]
+          }
+        ],
+        "Burgers": [
+          {
+            id: "bp3",
+            name: "Mushroom Swiss Burger",
+            description: "Beef patty with sautéed mushrooms and Swiss cheese",
+            price: 9.99,
+            image: "https://cdn-icons-png.flaticon.com/512/877/877951.png"
+          }
+        ],
+        "Sides": [
+          {
+            id: "bp4",
+            name: "French Fries",
+            description: "Crispy golden fries with sea salt",
+            price: 3.99,
+            image: "https://cdn-icons-png.flaticon.com/512/123/123300.png",
+            options: [
+              {
+                name: "Size",
+                required: true,
+                choices: [
+                  { name: "Regular", price: 0 },
+                  { name: "Large", price: 1.50 }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: 2,
+      name: "Pizza Heaven",
+      cuisine: "Italian",
+      price: "$$",
+      logo: "https://cdn-icons-png.flaticon.com/512/3132/3132693.png",
+      rating: 4.7,
+      deliveryTime: "20-30 min",
+      deliveryFee: "$1.99",
+      minOrder: 15,
+      tags: ["Pizza", "Italian", "Fast Food"],
+      featured: true,
+      promoCode: "PIZZA15",
+      discount: "15% off on all orders",
+      menu: {
+        "Popular Items": [
+          {
+            id: "ph1",
+            name: "Margherita Pizza",
+            description: "Fresh mozzarella, tomatoes, and basil",
+            price: 14.99,
+            image: "https://cdn-icons-png.flaticon.com/512/1404/1404945.png",
+            options: [
+              {
+                name: "Size",
+                required: true,
+                choices: [
+                  { name: "Medium", price: 0 },
+                  { name: "Large", price: 4.00 },
+                  { name: "Extra Large", price: 6.00 }
+                ]
+              },
+              {
+                name: "Crust",
+                required: true,
+                choices: [
+                  { name: "Regular", price: 0 },
+                  { name: "Thin", price: 0 },
+                  { name: "Stuffed", price: 3.00 }
+                ]
+              }
+            ]
+          }
+        ],
+        "Pizzas": [
+          {
+            id: "ph2",
+            name: "Pepperoni Feast",
+            description: "Double pepperoni and extra cheese",
+            price: 16.99,
+            image: "https://cdn-icons-png.flaticon.com/512/1404/1404945.png"
+          }
+        ]
+      }
+    },
+    {
+      id: 3,
+      name: "Sushi World",
+      cuisine: "Japanese",
+      price: "$$$",
+      logo: "https://cdn-icons-png.flaticon.com/512/2252/2252075.png",
+      rating: 4.8,
+      deliveryTime: "25-40 min",
+      deliveryFee: "$3.99",
+      minOrder: 20,
+      tags: ["Sushi", "Japanese", "Asian"],
+      featured: true,
+      menu: {
+        "Popular Rolls": [
+          {
+            id: "sw1",
+            name: "Dragon Roll",
+            description: "Eel, cucumber, avocado with tobiko",
+            price: 15.99,
+            image: "https://cdn-icons-png.flaticon.com/512/2252/2252075.png",
+            options: [
+              {
+                name: "Spice Level",
+                required: false,
+                choices: [
+                  { name: "Regular", price: 0 },
+                  { name: "Spicy Mayo", price: 0.50 }
+                ]
+              }
+            ]
+          }
+        ],
+        "Sashimi": [
+          {
+            id: "sw2",
+            name: "Salmon Sashimi",
+            description: "Fresh salmon (5 pieces)",
+            price: 12.99,
+            image: "https://cdn-icons-png.flaticon.com/512/2252/2252075.png"
+          }
+        ]
+      }
+    },
+    {
+      id: 4,
+      name: "Thai Spice",
+      cuisine: "Thai",
+      price: "$$",
+      logo: "https://cdn-icons-png.flaticon.com/512/3511/3511307.png",
+      rating: 4.6,
+      deliveryTime: "25-35 min",
+      deliveryFee: "$2.99",
+      minOrder: 15,
+      tags: ["Thai", "Asian", "Spicy"],
+      featured: true,
+      promoCode: "THAI20",
+      discount: "20% off on orders above $40",
+      menu: {
+        "Popular Items": [
+          {
+            id: "ts1",
+            name: "Pad Thai",
+            description: "Rice noodles with tofu, shrimp, peanuts, and tamarind sauce",
+            price: 13.99,
+            image: "https://cdn-icons-png.flaticon.com/512/5787/5787180.png",
+            options: [
+              {
+                name: "Protein",
+                required: true,
+                choices: [
+                  { name: "Chicken", price: 0 },
+                  { name: "Shrimp", price: 2.00 },
+                  { name: "Tofu", price: 0 }
+                ]
+              },
+              {
+                name: "Spice Level",
+                required: true,
+                choices: [
+                  { name: "Mild", price: 0 },
+                  { name: "Medium", price: 0 },
+                  { name: "Hot", price: 0 }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: 5,
+      name: "Mexican Fiesta",
+      cuisine: "Mexican",
+      price: "$$",
+      logo: "https://cdn-icons-png.flaticon.com/512/4727/4727466.png",
+      rating: 4.4,
+      deliveryTime: "20-30 min",
+      deliveryFee: "$2.49",
+      minOrder: 12,
+      tags: ["Mexican", "Tacos", "Burritos"],
+      featured: true,
+      menu: {
+        "Popular Items": [
+          {
+            id: "mf1",
+            name: "Street Tacos",
+            description: "Three soft corn tortillas with choice of meat, onions, and cilantro",
+            price: 11.99,
+            image: "https://cdn-icons-png.flaticon.com/512/6462/6462772.png",
+            options: [
+              {
+                name: "Meat Choice",
+                required: true,
+                choices: [
+                  { name: "Carne Asada", price: 0 },
+                  { name: "Al Pastor", price: 0 },
+                  { name: "Chicken", price: 0 }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: 6,
+      name: "Indian Spices",
+      cuisine: "Indian",
+      price: "$$",
+      logo: "https://cdn-icons-png.flaticon.com/512/2515/2515183.png",
+      rating: 4.7,
+      deliveryTime: "30-45 min",
+      deliveryFee: "$3.49",
+      minOrder: 20,
+      tags: ["Indian", "Curry", "Vegetarian"],
+      featured: true,
+      promoCode: "SPICE15",
+      discount: "15% off on orders above $50",
+      menu: {
+        "Popular Items": [
+          {
+            id: "is1",
+            name: "Butter Chicken",
+            description: "Tender chicken in rich tomato-butter sauce",
+            price: 15.99,
+            image: "https://cdn-icons-png.flaticon.com/512/2515/2515183.png",
+            options: [
+              {
+                name: "Spice Level",
+                required: true,
+                choices: [
+                  { name: "Mild", price: 0 },
+                  { name: "Medium", price: 0 },
+                  { name: "Hot", price: 0 }
+                ]
+              },
+              {
+                name: "Add-ons",
+                required: false,
+                choices: [
+                  { name: "Naan Bread", price: 2.99 },
+                  { name: "Raita", price: 1.99 }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: 7,
+      name: "Mediterranean Delight",
+      cuisine: "Mediterranean",
+      price: "$$",
+      logo: "https://cdn-icons-png.flaticon.com/512/3511/3511315.png",
+      rating: 4.6,
+      deliveryTime: "25-35 min",
+      deliveryFee: "$2.99",
+      minOrder: 15,
+      tags: ["Mediterranean", "Healthy", "Vegetarian"],
+      featured: true,
+      menu: {
+        "Popular Items": [
+          {
+            id: "md1",
+            name: "Falafel Platter",
+            description: "Crispy falafel served with hummus, tahini, and pita bread",
+            price: 14.99,
+            image: "https://cdn-icons-png.flaticon.com/512/8060/8060549.png",
+            options: [
+              {
+                name: "Size",
+                required: true,
+                choices: [
+                  { name: "Regular", price: 0 },
+                  { name: "Large", price: 4.00 }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: 8,
+      name: "Dim Sum House",
+      cuisine: "Chinese",
+      price: "$$",
+      logo: "https://cdn-icons-png.flaticon.com/512/2515/2515207.png",
+      rating: 4.7,
+      deliveryTime: "30-45 min",
+      deliveryFee: "$3.49",
+      minOrder: 20,
+      tags: ["Chinese", "Dim Sum", "Asian"],
+      featured: true,
+      menu: {
+        "Popular Items": [
+          {
+            id: "ds1",
+            name: "Dim Sum Sampler",
+            description: "Assortment of dumplings, buns, and rolls",
+            price: 18.99,
+            image: "https://cdn-icons-png.flaticon.com/512/2515/2515207.png",
+            options: [
+              {
+                name: "Size",
+                required: true,
+                choices: [
+                  { name: "Small (8 pcs)", price: 0 },
+                  { name: "Large (12 pcs)", price: 6.00 }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: 9,
+      name: "Korean BBQ Express",
+      cuisine: "Korean",
+      price: "$$$",
+      logo: "https://cdn-icons-png.flaticon.com/512/2276/2276931.png",
+      rating: 4.8,
+      deliveryTime: "35-50 min",
+      deliveryFee: "$4.99",
+      minOrder: 25,
+      tags: ["Korean", "BBQ", "Asian"],
+      featured: true,
+      menu: {
+        "Popular Items": [
+          {
+            id: "kb1",
+            name: "Bulgogi Bowl",
+            description: "Marinated beef with rice and vegetables",
+            price: 16.99,
+            image: "https://cdn-icons-png.flaticon.com/512/13459/13459912.png",
+            options: [
+              {
+                name: "Spice Level",
+                required: true,
+                choices: [
+                  { name: "Mild", price: 0 },
+                  { name: "Medium", price: 0 },
+                  { name: "Spicy", price: 0 }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ];
+
+  // Cart data structure is now defined in script.js
+  
+  // Filter restaurants by category
+  function filterRestaurants(category) {
+    const filteredRestaurants = sampleRestaurants.filter(restaurant =>
+      category === 'All' || restaurant.tags.includes(category)
+    );
+    displayRestaurantsLocal(filteredRestaurants);
+  }
+
+  // Display restaurants
+  function displayRestaurantsLocal(restaurants) {
+    const restaurantList = document.getElementById('restaurant-list');
+    restaurantList.innerHTML = '';
+    restaurants.forEach((restaurant, index) => {
+      const restaurantCard = document.createElement('div');
+      restaurantCard.className = 'restaurant';
+      restaurantCard.onclick = (e) => {
+        // Don't show menu if clicking the favorite button
+        if (!e.target.closest('.favorite-btn')) {
+          showRestaurantMenuLocal(index);
+        }
+      };
+      restaurantCard.innerHTML = `
+        <img src="${restaurant.logo}" alt="${restaurant.name}">
+        <button class="favorite-btn" onclick="toggleFavoriteLocal(${index}, event)">
+          <i class="far fa-heart"></i>
+        </button>
+        <div class="restaurant-info">
+          <div class="restaurant-header">
+            <h3>${restaurant.name}</h3>
+            <div class="rating">
+              <i class="fas fa-star"></i>
+              <span>${restaurant.rating}</span>
+            </div>
+          </div>
+          <div class="restaurant-meta">
+            <span><i class="fas fa-utensils"></i> ${restaurant.cuisine}</span>
+            <span><i class="fas fa-dollar-sign"></i> ${restaurant.price}</span>
+            <span><i class="fas fa-clock"></i> ${restaurant.deliveryTime}</span>
+          </div>
+          <div class="restaurant-tags">
+            ${restaurant.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          </div>
+        </div>
+      `;
+      restaurantList.appendChild(restaurantCard);
+    });
+  }
+
+  // Show restaurant menu
+  function showRestaurantMenuLocal(index) {
+    const restaurant = sampleRestaurants[index];
+    const menuModal = document.createElement('div');
+    menuModal.className = 'menu-modal';
+    menuModal.innerHTML = `
+      <div class="menu-content">
+        <div class="menu-header">
+          <div class="restaurant-menu-header">
+            <img src="${restaurant.logo}" alt="${restaurant.name}">
+            <div class="restaurant-info">
+              <h2>${restaurant.name}</h2>
+              <div class="restaurant-meta">
+                <span><i class="fas fa-star"></i> ${restaurant.rating}</span>
+                <span><i class="fas fa-clock"></i> ${restaurant.deliveryTime}</span>
+                <span><i class="fas fa-dollar-sign"></i> ${restaurant.price}</span>
+              </div>
+              ${restaurant.discount ? `<div class="discount-badge">${restaurant.discount}</div>` : ''}
+            </div>
+          </div>
+          <button class="close-menu-btn" onclick="closeMenuModal()">&times;</button>
+        </div>
+        <div class="menu-items">
+          ${Object.entries(restaurant.menu).map(([category, items]) => `
+            <div class="menu-category">
+              <h3>${category}</h3>
+              <div class="menu-items-list">
+                ${items.map(item => `
+                  <div class="menu-item">
+                    <div class="menu-item-info">
+                      <h4>${item.name}</h4>
+                      <p>${item.description}</p>
+                      <span class="price">$${item.price.toFixed(2)}</span>
+                      ${item.options ? `
+                        <button class="customize-btn" onclick="showCustomizeModal(${index}, '${item.id}')">
+                          Customize <i class="fas fa-chevron-right"></i>
+                        </button>
+                      ` : `
+                        <button class="add-to-cart-btn" onclick="addToCart(${index}, '${item.id}')">
+                          Add to Cart <i class="fas fa-plus"></i>
+                        </button>
+                      `}
+                    </div>
+                    <div class="menu-item-image">
+                      <img src="${item.image}" alt="${item.name}">
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(menuModal);
+  }
+
+  // Close menu modal
+  function closeMenuModal() {
+    const menuModal = document.querySelector('.menu-modal');
+    if (menuModal) {
+      menuModal.remove();
+    }
+  }
+
+  // Show customize modal for items with options
+  function showCustomizeModal(restaurantIndex, itemId) {
+    const restaurant = sampleRestaurants[restaurantIndex];
+    const item = findMenuItem(restaurant, itemId);
+    if (!item) return;
+
+    const customizeModal = document.createElement('div');
+    customizeModal.className = 'customize-modal';
+    customizeModal.innerHTML = `
+      <div class="customize-content">
+        <div class="customize-header">
+          <h3>Customize ${item.name}</h3>
+          <button class="close-customize-btn" onclick="closeCustomizeModal()">&times;</button>
+        </div>
+        <div class="customize-options">
+          ${item.options.map((option, optionIndex) => `
+            <div class="option-group">
+              <h4>${option.name} ${option.required ? '<span class="required">*</span>' : ''}</h4>
+              <div class="option-choices">
+                ${option.choices.map((choice, choiceIndex) => `
+                  <label class="option-choice">
+                    <input type="${option.required ? 'radio' : 'checkbox'}" 
+                           name="option-${optionIndex}" 
+                           value="${choice.name}"
+                           ${option.required && choiceIndex === 0 ? 'checked' : ''}>
+                    <span class="choice-name">${choice.name}</span>
+                    ${choice.price > 0 ? `<span class="choice-price">+$${choice.price.toFixed(2)}</span>` : ''}
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="customize-footer">
+          <button class="add-to-cart-btn" onclick="addToCartWithOptions(${restaurantIndex}, '${itemId}')">
+            Add to Cart - $${item.price.toFixed(2)}
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(customizeModal);
+  }
+
+  // Close customize modal
+  function closeCustomizeModal() {
+    const customizeModal = document.querySelector('.customize-modal');
+    if (customizeModal) {
+      customizeModal.remove();
+    }
+  }
+
+  // Helper function to find menu item
+  function findMenuItem(restaurant, itemId) {
+    for (const category in restaurant.menu) {
+      const item = restaurant.menu[category].find(item => item.id === itemId);
+      if (item) return item;
+    }
+    return null;
+  }
+
+  // Add item to cart with selected options
+  function addToCartWithOptions(restaurantIndex, itemId) {
+    const restaurant = sampleRestaurants[restaurantIndex];
+    const item = findMenuItem(restaurant, itemId);
+    if (!item) return;
+
+    // Get selected options
+    const selectedOptions = [];
+    item.options.forEach((option, optionIndex) => {
+      const choices = document.getElementsByName(`option-${optionIndex}`);
+      choices.forEach(choice => {
+        if (choice.checked) {
+          const choiceObj = option.choices.find(c => c.name === choice.value);
+          if (choiceObj) {
+            selectedOptions.push({
+              name: option.name,
+              choice: choiceObj.name,
+              price: choiceObj.price
+            });
+          }
+        }
+      });
+    });
+
+    // Calculate total price
+    const optionsTotal = selectedOptions.reduce((sum, option) => sum + option.price, 0);
+    const totalPrice = item.price + optionsTotal;
+
+    // Add to cart
+    const cartItem = {
+      id: itemId,
+      name: item.name,
+      price: totalPrice,
+      options: selectedOptions,
+      quantity: 1
+    };
+
+    // Check if we need to clear cart (different restaurant)
+    if (cart.restaurant && cart.restaurant.id !== restaurant.id) {
+      if (confirm('Adding items from a different restaurant will clear your current cart. Continue?')) {
+        cart.items = [];
+        cart.restaurant = restaurant;
+      } else {
+        return;
+      }
+    }
+
+    // Set restaurant if cart is empty
+    if (!cart.restaurant) {
+      cart.restaurant = restaurant;
+    }
+
+    // Add item to cart
+    cart.items.push(cartItem);
+    updateCart();
+    closeCustomizeModal();
+    showToast('Item added to cart');
+  }
+
+  // Add item to cart (simple version for items without options)
+  function addToCart(restaurantIndex, itemId) {
+    const restaurant = sampleRestaurants[restaurantIndex];
+    const item = findMenuItem(restaurant, itemId);
+    if (!item) return;
+
+    // Check if we need to clear cart (different restaurant)
+    if (cart.restaurant && cart.restaurant.id !== restaurant.id) {
+      if (confirm('Adding items from a different restaurant will clear your current cart. Continue?')) {
+        cart.items = [];
+        cart.restaurant = restaurant;
+      } else {
+        return;
+      }
+    }
+
+    // Set restaurant if cart is empty
+    if (!cart.restaurant) {
+      cart.restaurant = restaurant;
+    }
+
+    // Add item to cart
+    cart.items.push({
+      id: itemId,
+      name: item.name,
+      price: item.price,
+      quantity: 1
+    });
+
+    updateCart();
+    showToast('Item added to cart');
+  }
+
+  // Update cart totals and UI
+  function updateCart() {
+    // Calculate totals
+    cart.subtotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    cart.deliveryFee = cart.restaurant ? parseFloat(cart.restaurant.deliveryFee.replace('$', '')) : 0;
+    cart.total = cart.subtotal + cart.deliveryFee;
+
+    // Update cart count
+    const cartCount = document.getElementById('cart-count');
+    if (cartCount) {
+      cartCount.textContent = cart.items.length;
+    }
+
+    // Save cart to localStorage
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }
+
+  // Show toast message
+  function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => toast.remove(), 300);
+    }, 2000);
+  }
+
+  // Initialize cart from localStorage
+  function initializeCart() {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      try {
+        cart = JSON.parse(savedCart);
+        updateCart();
+      } catch (error) {
+        console.error('Error loading cart:', error);
+        localStorage.removeItem('cart');
+      }
+    }
+  }
+
+  // View cart
+  function viewCart() {
+    const cartModal = document.createElement('div');
+    cartModal.className = 'cart-modal';
+    cartModal.style.display = 'flex';
+    
+    const cartContent = `
+      <div class="cart-content">
+        <div class="cart-header">
+          <h2>Your Cart</h2>
+          <button class="close-cart-btn" onclick="closeCartModal()">&times;</button>
+        </div>
+        ${cart.restaurant ? `
+          <div id="cart-delivery-address">
+            Delivery to: ${selectedAddress || 'Please select a delivery address'}
+          </div>
+          <div id="cart-list">
+            <div class="restaurant-group">
+              <h3>${cart.restaurant.name}</h3>
+              ${cart.items.map(item => `
+                <div class="cart-item">
+                  <div>
+                    <h4>${item.name}</h4>
+                    ${item.options ? `
+                      <p>${item.options.map(opt => `${opt.name}: ${opt.choice}`).join(', ')}</p>
+                    ` : ''}
+                    <p>$${item.price.toFixed(2)}</p>
+                  </div>
+                  <div class="item-actions">
+                    <div class="quantity-controls">
+                      <button onclick="updateQuantity(${cart.items.indexOf(item)}, -1)">-</button>
+                      <span>${item.quantity}</span>
+                      <button onclick="updateQuantity(${cart.items.indexOf(item)}, 1)">+</button>
+                    </div>
+                    <button class="remove-item-btn" onclick="removeFromCart(${cart.items.indexOf(item)})">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <div class="cart-summary">
+            <div>
+              <span>Subtotal</span>
+              <span>$${cart.subtotal.toFixed(2)}</span>
+            </div>
+            <div>
+              <span>Delivery Fee</span>
+              <span>$${cart.deliveryFee.toFixed(2)}</span>
+            </div>
+            <div class="final-total">
+              <span>Total</span>
+              <span>$${cart.total.toFixed(2)}</span>
+            </div>
+          </div>
+          <button class="checkout-btn" onclick="showCheckout()">
+            Proceed to Checkout
+          </button>
+        ` : `
+          <div class="empty-cart">
+            <p>Your cart is empty</p>
+            <p>Add items from restaurants to start your order</p>
+          </div>
+        `}
+      </div>
+    `;
+    
+    cartModal.innerHTML = cartContent;
+    document.body.appendChild(cartModal);
+  }
+
+  // Close cart modal
+  function closeCartModal() {
+    const cartModal = document.querySelector('.cart-modal');
+    if (cartModal) {
+      cartModal.remove();
+    }
+  }
+
+  // Update item quantity in cart
+  function updateQuantity(index, change) {
+    const item = cart.items[index];
+    const newQuantity = item.quantity + change;
+    
+    if (newQuantity < 1) {
+      removeFromCart(index);
+    } else {
+      item.quantity = newQuantity;
+      updateCart();
+      viewCart(); // Refresh cart view
+    }
+  }
+
+  // Remove item from cart
+  function removeFromCart(index) {
+    cart.items.splice(index, 1);
+    if (cart.items.length === 0) {
+      cart.restaurant = null;
+    }
+    updateCart();
+    viewCart(); // Refresh cart view
+  }
+
+  // Show checkout
+  function showCheckout() {
+    if (!selectedAddress) {
+      showToast('Please select a delivery address first');
+      return;
+    }
+
+    const checkoutModal = document.getElementById('checkout-modal');
+    const checkoutAddress = document.getElementById('checkout-address');
+    const checkoutItems = document.getElementById('checkout-items');
+    const estimatedTime = document.getElementById('estimated-time');
+    
+    // Set delivery address
+    checkoutAddress.textContent = selectedAddress;
+    
+    // Set estimated delivery time
+    const deliveryTime = cart.restaurant.deliveryTime;
+    estimatedTime.textContent = `Estimated delivery time: ${deliveryTime}`;
+    
+    // Display order items
+    checkoutItems.innerHTML = `
+      <div class="restaurant-group">
+        <h4>${cart.restaurant.name}</h4>
+        ${cart.items.map(item => `
+          <div class="checkout-item">
+            <span>${item.quantity}x ${item.name}</span>
+            <span>$${(item.price * item.quantity).toFixed(2)}</span>
+          </div>
+        `).join('')}
+        <div class="price-summary">
+          <div>
+            <span>Subtotal</span>
+            <span>$${cart.subtotal.toFixed(2)}</span>
+          </div>
+          <div>
+            <span>Delivery Fee</span>
+            <span>$${cart.deliveryFee.toFixed(2)}</span>
+          </div>
+          <div class="total">
+            <span>Total</span>
+            <span>$${cart.total.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    checkoutModal.style.display = 'flex';
+    closeCartModal();
+  }
+
+  // Close checkout
+  function closeCheckout() {
+    document.getElementById('checkout-modal').style.display = 'none';
+  }
+
+  // Process order
+  function processOrder() {
+    const checkoutModal = document.getElementById('checkout-modal');
+    const orderInstructions = document.getElementById('order-instructions').value;
+    const promoCode = document.getElementById('promo-code').value;
+    const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+    
+    // Create order object
+    const order = {
+      id: Date.now().toString(),
+      restaurant: cart.restaurant,
+      items: cart.items,
+      total: cart.total,
+      address: selectedAddress,
+      instructions: orderInstructions,
+      promoCode: promoCode,
+      paymentMethod: paymentMethod,
+      status: 'confirmed',
+      timestamp: new Date().toISOString()
+    };
+    
+    // Save order to localStorage
+    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+    orders.push(order);
+    localStorage.setItem('orders', JSON.stringify(orders));
+    
+    // Clear cart
+    cart = {
+      items: [],
+      restaurant: null,
+      subtotal: 0,
+      deliveryFee: 0,
+      total: 0
+    };
+    updateCart();
+    
+    // Close checkout modal
+    closeCheckout();
+    
+    // Show order tracking
+    showOrderTracking(order);
+  }
+
+  // Show order tracking
+  function showOrderTracking(order) {
+    const trackingModal = document.getElementById('tracking-modal');
+    const trackingAddress = document.getElementById('tracking-address');
+    const trackingItems = document.getElementById('tracking-items');
+    const trackingEta = document.getElementById('tracking-eta');
+    
+    // Set delivery address
+    trackingAddress.textContent = order.address;
+    
+    // Set estimated delivery time
+    const deliveryTime = order.restaurant.deliveryTime;
+    trackingEta.textContent = deliveryTime;
+    
+    // Display order items
+    trackingItems.innerHTML = `
+      <div class="order-items-container">
+        <div class="order-restaurant">
+          <h4>${order.restaurant.name}</h4>
+        </div>
+        <div class="order-items">
+          ${order.items.map(item => `
+            <div class="order-item">
+              <span>${item.quantity}x ${item.name}</span>
+              <span>$${(item.price * item.quantity).toFixed(2)}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="order-details">
+          <div class="order-total">
+            <span>Total</span>
+            <span>$${order.total.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Show tracking modal
+    trackingModal.style.display = 'flex';
+    
+    // Simulate order progress
+    simulateOrderProgress();
+  }
+
+  // Close tracking modal
+  function closeTracking() {
+    document.getElementById('tracking-modal').style.display = 'none';
+  }
+
+  // Simulate order progress
+  function simulateOrderProgress() {
+    const steps = document.querySelectorAll('.status-step');
+    let currentStep = 0;
+    
+    function updateStep() {
+      if (currentStep < steps.length) {
+        steps[currentStep].classList.add('active');
+        currentStep++;
+        setTimeout(updateStep, 5000); // Update every 5 seconds
+      }
+    }
+    
+    updateStep();
+  }
+
+  // Apply promo code
+  function applyPromoCode() {
+    const promoInput = document.getElementById('promo-code');
+    const code = promoInput.value.toUpperCase();
+    
+    if (promoCodes[code]) {
+      const promo = promoCodes[code];
+      if (promo.discount) {
+        cart.total = cart.total * (1 - promo.discount);
+      }
+      if (promo.freeShipping) {
+        cart.deliveryFee = 0;
+        cart.total = cart.subtotal;
+      }
+      showToast(`Promo code applied: ${promo.description}`);
+      updateCart();
+      showCheckout(); // Refresh checkout view
+    } else {
+      showToast('Invalid promo code');
+    }
+  }
+
+  // Sort restaurants
+  function sortRestaurants(criteria) {
+    let sortedRestaurants = [...sampleRestaurants];
+    
+    switch(criteria) {
+      case 'rating':
+        sortedRestaurants.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'deliveryTime':
+        sortedRestaurants.sort((a, b) => {
+          const getMinutes = (time) => parseInt(time.split('-')[0]);
+          return getMinutes(a.deliveryTime) - getMinutes(b.deliveryTime);
+        });
+        break;
+      case 'price':
+        sortedRestaurants.sort((a, b) => a.price.length - b.price.length);
+        break;
+    }
+    
+    displayRestaurantsLocal(sortedRestaurants);
+  }
+
+  // Toggle favorite
+  function toggleFavoriteLocal(index, event) {
+    event.stopPropagation(); // Prevent the card click event
+    const btn = event.currentTarget;
+    const icon = btn.querySelector('i');
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const restaurant = sampleRestaurants[index];
+    
+    if (icon.classList.contains('far')) {
+      icon.classList.remove('far');
+      icon.classList.add('fas');
+      favorites.push(restaurant.id);
+      showToast('Added to favorites');
+    } else {
+      icon.classList.remove('fas');
+      icon.classList.add('far');
+      const idx = favorites.indexOf(restaurant.id);
+      if (idx > -1) {
+        favorites.splice(idx, 1);
+      }
+      showToast('Removed from favorites');
+    }
+    
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    
+    // If we're on the favorites tab, refresh the display
+    if (document.getElementById('favorites').classList.contains('active')) {
+      showFavoritesLocal();
+    }
+  }
+
+  // Show favorites function
+  function showFavoritesLocal() {
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const favoriteRestaurants = sampleRestaurants.filter(restaurant => 
+      favorites.includes(restaurant.id)
+    );
+    
+    const favoritesList = document.getElementById('favorites-list');
+    if (favoritesList) {
+      favoritesList.innerHTML = '';
+      if (favoriteRestaurants.length === 0) {
+        favoritesList.innerHTML = '<div class="no-favorites">No favorite restaurants yet</div>';
+        return;
+      }
+      
+      favoriteRestaurants.forEach((restaurant, index) => {
+        const restaurantCard = document.createElement('div');
+        restaurantCard.className = 'restaurant';
+        restaurantCard.onclick = (e) => {
+          if (!e.target.closest('.favorite-btn')) {
+            showRestaurantMenuLocal(sampleRestaurants.findIndex(r => r.id === restaurant.id));
+          }
+        };
+        restaurantCard.innerHTML = `
+          <img src="${restaurant.logo}" alt="${restaurant.name}">
+          <button class="favorite-btn" onclick="toggleFavoriteLocal(${sampleRestaurants.findIndex(r => r.id === restaurant.id)}, event)">
+            <i class="fas fa-heart"></i>
+          </button>
+          <div class="restaurant-info">
+            <div class="restaurant-header">
+              <h3>${restaurant.name}</h3>
+              <div class="rating">
+                <i class="fas fa-star"></i>
+                <span>${restaurant.rating}</span>
+              </div>
+            </div>
+            <div class="restaurant-meta">
+              <span><i class="fas fa-utensils"></i> ${restaurant.cuisine}</span>
+              <span><i class="fas fa-dollar-sign"></i> ${restaurant.price}</span>
+              <span><i class="fas fa-clock"></i> ${restaurant.deliveryTime}</span>
+            </div>
+            <div class="restaurant-tags">
+              ${restaurant.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+            </div>
+          </div>
+        `;
+        favoritesList.appendChild(restaurantCard);
+      });
+    }
+  }
+
+  // Initialize map function with proper error handling
+  function initializeMap() {
+    if (!mapInitialized) {
+      const mapElement = document.getElementById('map');
+      if (mapElement && window.google && window.google.maps) {
+        try {
+          const map = new google.maps.Map(mapElement, {
+            center: { lat: -34.397, lng: 150.644 },
+            zoom: 8,
+            styles: document.body.getAttribute('data-theme') === 'dark' ? DARK_MAP_STYLE : []
+          });
+          
+          // Initialize the autocomplete
+          const input = document.getElementById('address');
+          const autocomplete = new google.maps.places.Autocomplete(input);
+          
+          // Bias the autocomplete to the map's viewport
+          autocomplete.bindTo('bounds', map);
+          
+          // Listen for place selection
+          autocomplete.addListener('place_changed', function() {
+            const place = autocomplete.getPlace();
+            if (!place.geometry) {
+              showToast('Please select a valid address');
+              return;
+            }
+            
+            // Update map
+            map.setCenter(place.geometry.location);
+            map.setZoom(17);
+            
+            // Add marker
+            new google.maps.Marker({
+              map: map,
+              position: place.geometry.location
+            });
+          });
+          
+          mapInitialized = true;
+        } catch (error) {
+          console.error('Error initializing map:', error);
+          showToast('Error loading map. Please try again later.');
+        }
+      } else {
+        console.error('Map element or Google Maps not found');
+        showToast('Error loading map. Please try again later.');
+      }
+    }
+  }
+
+  // Add address function
+  function addAddress() {
+    const addressInput = document.getElementById('address');
+    const address = addressInput.value.trim();
+    
+    if (!address) {
+      showToast('Please enter an address');
+      return;
+    }
+    
+    // Get addresses from localStorage
+    const addresses = JSON.parse(localStorage.getItem('addresses') || '[]');
+    
+    // Add new address
+    addresses.push(address);
+    
+    // Save to localStorage
+    localStorage.setItem('addresses', JSON.stringify(addresses));
+    
+    // Update address list
+    displayAddresses();
+    
+    // Clear input
+    addressInput.value = '';
+    
+    showToast('Address added successfully');
+  }
+
+  // Display addresses function
+  function displayAddresses() {
+    const addressList = document.getElementById('address-list');
+    const addresses = JSON.parse(localStorage.getItem('addresses') || '[]');
+    
+    if (addressList) {
+      addressList.innerHTML = '';
+      
+      if (addresses.length === 0) {
+        addressList.innerHTML = '<li class="no-addresses">No addresses saved yet</li>';
+        return;
+      }
+      
+      addresses.forEach((address, index) => {
+        const li = document.createElement('li');
+        li.className = address === selectedAddress ? 'selected' : '';
+        li.innerHTML = `
+          <span class="address-text">${address}</span>
+          <div class="address-actions">
+            <button class="select-address-btn" onclick="selectAddress(${index})">
+              ${address === selectedAddress ? 'Selected' : 'Select'}
+            </button>
+            <button class="delete-address-btn" onclick="deleteAddress(${index})">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        `;
+        addressList.appendChild(li);
+      });
+    }
+  }
+
+  // Select address function
+  function selectAddress(index) {
+    const addresses = JSON.parse(localStorage.getItem('addresses') || '[]');
+    selectedAddress = addresses[index];
+    localStorage.setItem('selectedAddress', selectedAddress);
+    
+    // Update display
+    const display = document.getElementById('selected-address-display');
+    if (display) {
+      display.textContent = selectedAddress;
+      display.classList.add('has-address');
+    }
+    
+    displayAddresses();
+    showToast('Delivery address updated');
+  }
+
+  // Delete address function
+  function deleteAddress(index) {
+    const addresses = JSON.parse(localStorage.getItem('addresses') || '[]');
+    
+    // Remove address
+    addresses.splice(index, 1);
+    localStorage.setItem('addresses', JSON.stringify(addresses));
+    
+    // If deleted address was selected, clear selection
+    if (selectedAddress === addresses[index]) {
+      selectedAddress = null;
+      localStorage.removeItem('selectedAddress');
+      const display = document.getElementById('selected-address-display');
+      if (display) {
+        display.textContent = 'Select delivery address';
+        display.classList.remove('has-address');
+      }
+    }
+    
+    displayAddresses();
+    showToast('Address deleted');
+  }
+
+  // Initialize addresses on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    selectedAddress = localStorage.getItem('selectedAddress');
+    const display = document.getElementById('selected-address-display');
+    if (display && selectedAddress) {
+      display.textContent = selectedAddress;
+      display.classList.add('has-address');
+    }
+  });
+
+  // Theme toggle function
+  function toggleTheme() {
+    const body = document.body;
+    const currentTheme = body.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    body.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Update theme toggle button icon
+    const themeIcon = document.querySelector('.theme-toggle i');
+    if (themeIcon) {
+      themeIcon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+  }
+
+  // Initialize theme
+  document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-theme', savedTheme);
+    const themeIcon = document.querySelector('.theme-toggle i');
+    if (themeIcon) {
+      themeIcon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+  });
+
+  // Make functions globally available
+  window.showRegistrationPage = showRegistrationPage;
+  window.showLogin = showLogin;
+  window.registerUser = registerUser;
+  window.directLogin = directLogin;
+</script>
+</body>
+</html>
