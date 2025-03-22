@@ -1,12 +1,16 @@
 # TastyGo - Food Delivery Application
 
-A modern food delivery web application built with HTML, CSS, and JavaScript.
+A modern food delivery web application built with HTML, CSS, JavaScript, Node.js, Express, and MongoDB.
 
-## 🔒 Important Security Note
+## 🔒 Important Security Notes
 
-This application requires a Google Maps API key to function properly. For security reasons, the API key is not included in this repository. You must create your own `env.js` file with your API key.
+1. This application requires a Google Maps API key for the frontend.
+2. The backend uses MongoDB Atlas for database storage.
+3. API keys and database credentials should be kept private.
 
 ## 🚀 Setup Instructions
+
+### Frontend Setup
 
 1. Clone the repository:
 ```bash
@@ -27,11 +31,7 @@ cp env.example.js env.js
      - Places API
      - Geocoding API
    - Create credentials (API key)
-   - Add your domain to the API key restrictions:
-     ```
-     http://localhost:5500/*
-     http://127.0.0.1:5500/*
-     ```
+   - Add your domain to the API key restrictions
 
 4. Update `env.js` with your API key:
 ```javascript
@@ -40,41 +40,115 @@ window.env = {
 };
 ```
 
-5. Start a local server:
-```bash
-# Using Python 3
-python -m http.server 5500
+### Backend Setup
 
-# Or using Node.js with live-server
-npx live-server --port=5500
+1. Install dependencies:
+```bash
+npm install
 ```
 
-## 🔐 Security Best Practices
+2. Create a .env file in the root directory:
+```
+MONGODB_URI=mongodb+srv://your_username:your_password@your_cluster.mongodb.net/tastygo?retryWrites=true&w=majority
+PORT=3000
+JWT_SECRET=your_jwt_secret
+```
 
-1. Never commit `env.js` to version control
-2. Keep your API keys private
-3. Use proper API key restrictions in Google Cloud Console
-4. For production:
-   - Use environment variables
-   - Add your production domain to API key restrictions
-   - Consider using a backend proxy for API calls
+3. Set up MongoDB Atlas:
+   - Create an account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+   - Create a new cluster
+   - Create a database user
+   - Allow network access (IP Whitelist)
+   - Get your connection string
+   - Update the .env file with your connection string
 
-## ✨ Features
+4. Seed the database:
+```bash
+npm run seed
+```
 
-- User authentication
-- Restaurant browsing and filtering
-- Food ordering system
-- Cart management
-- Address management with Google Maps integration
-- Dark/Light theme toggle
-- Responsive design
+5. Start the server:
+```bash
+npm start
+```
 
-## 🛠️ Development
+## 📊 Database Schema
 
-- The application uses vanilla JavaScript
-- Styles are managed in `styles.css`
-- Main application logic is in `script.js`
-- Configuration is handled in `config.js`
+### User Model
+- `username`: String (unique)
+- `email`: String (unique)
+- `password`: String (hashed)
+- `fullName`: String
+- `addresses`: Array of address objects
+- `phoneNumber`: String
+- `favorites`: Array of restaurant references
+- `orders`: Array of order references
+
+### Restaurant Model
+- `name`: String
+- `cuisine`: String
+- `price`: String ('$', '$$', '$$$', '$$$$')
+- `logo`: String (URL)
+- `rating`: Number
+- `deliveryTime`: String
+- `deliveryFee`: Number
+- `tags`: Array of strings
+- `menu`: Map of menu items
+- `location`: GeoJSON Point
+- `isActive`: Boolean
+
+### Order Model
+- `user`: Reference to User
+- `restaurant`: Reference to Restaurant
+- `items`: Array of order items
+- `subtotal`: Number
+- `deliveryFee`: Number
+- `total`: Number
+- `status`: String (enum)
+- `deliveryAddress`: Object
+- `paymentMethod`: String
+- `createdAt`: Date
+
+## 🔐 API Endpoints
+
+### Authentication
+- `POST /api/users/register`: Register a new user
+- `POST /api/users/login`: Login a user
+
+### User Management
+- `GET /api/users/me`: Get current user profile
+- `PUT /api/users/me`: Update user profile
+- `POST /api/users/addresses`: Add a new address
+- `DELETE /api/users/addresses/:addressId`: Delete an address
+- `POST /api/users/favorites`: Toggle restaurant favorite
+
+### Restaurants
+- `GET /api/restaurants`: Get all restaurants
+- `GET /api/restaurants/popular`: Get popular restaurants
+- `GET /api/restaurants/featured`: Get featured restaurants
+- `GET /api/restaurants/cuisine/:cuisineType`: Get restaurants by cuisine
+- `GET /api/restaurants/search/:term`: Search restaurants
+- `GET /api/restaurants/near`: Find nearby restaurants
+- `GET /api/restaurants/:id`: Get restaurant by ID
+
+### Orders
+- `GET /api/orders/user/:userId`: Get all orders for a user
+- `GET /api/orders/:id`: Get order by ID
+- `POST /api/orders`: Create a new order
+- `PATCH /api/orders/:id/status`: Update order status
+- `PATCH /api/orders/:id/cancel`: Cancel an order
+
+## 🚀 Deployment
+
+### Front-end
+The front-end is deployed on GitHub Pages.
+
+### Back-end
+The back-end can be deployed on:
+- Heroku
+- AWS Elastic Beanstalk
+- Digital Ocean
+- Any other Node.js hosting platform
 
 ## 🤝 Contributing
 
