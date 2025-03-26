@@ -2091,4 +2091,26 @@ button .fas, button .far, button .fab {
   color: white;
 }
 
+/* Restaurant portal link */
+.restaurant-portal-link {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.restaurant-portal-link a {
+  color: #ff5a5f;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.restaurant-portal-link a:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+.restaurant-portal-link i {
+  margin-right: 5px;
+}
+
 

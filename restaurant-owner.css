@@ -1,0 +1,628 @@
+/* Restaurant Owner Portal CSS */
+
+.restaurant-form {
+  max-width: 600px;
+}
+
+.tab-buttons {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.tab-button.active {
+  opacity: 1;
+  border-bottom: 3px solid #000;
+  font-weight: bold;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.switch-portal {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.switch-portal a {
+  color: #000;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.switch-portal a:hover {
+  text-decoration: underline;
+}
+
+.required-field label::after {
+  content: "*";
+  color: #ff3b30;
+}
+
+/* Dashboard Styles */
+.restaurant-name {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+}
+
+.restaurant-name i {
+  margin-right: 8px;
+}
+
+.dashboard-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.tabs button i {
+  margin-right: 8px;
+}
+
+.tabs button.active {
+  opacity: 1;
+  border-bottom: 3px solid #000;
+  font-weight: bold;
+}
+
+.tab-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.tab-content {
+  display: none;
+  padding: 20px;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.tab-content h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Order Management */
+.order-filters {
+  display: flex;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  margin-right: 10px;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filter-btn.active {
+  background: #000;
+  color: white;
+  border-color: #000;
+}
+
+.orders-list {
+  border: 1px solid #eee;
+  border-radius: 4px;
+  min-height: 200px;
+}
+
+.order-item {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-info h4 {
+  margin: 0 0 5px 0;
+}
+
+.order-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.status-pending {
+  background: #f8f9fa;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.status-confirmed {
+  background: #e8f4e8;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.status-preparing {
+  background: #e8f0fe;
+  color: #1565c0;
+  border: 1px solid #bbdefb;
+}
+
+.status-ready {
+  background: #fff8e1;
+  color: #f57c00;
+  border: 1px solid #ffe082;
+}
+
+.status-delivering {
+  background: #f3e5f5;
+  color: #7b1fa2;
+  border: 1px solid #e1bee7;
+}
+
+.status-delivered {
+  background: #e0f2f1;
+  color: #00695c;
+  border: 1px solid #b2dfdb;
+}
+
+.status-cancelled {
+  background: #feebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+.order-actions select {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-left: 10px;
+}
+
+/* Menu Management */
+.menu-actions {
+  margin-bottom: 20px;
+}
+
+.add-item-btn {
+  padding: 10px 16px;
+  background: #000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.add-item-btn:hover {
+  opacity: 0.9;
+}
+
+.add-item-btn i {
+  margin-right: 8px;
+}
+
+.menu-categories {
+  margin-top: 30px;
+}
+
+.menu-categories h3 {
+  margin-bottom: 15px;
+  color: #555;
+}
+
+.menu-category {
+  border: 1px solid #eee;
+  border-radius: 4px;
+  min-height: 200px;
+}
+
+.menu-category-group {
+  margin-bottom: 20px;
+}
+
+.menu-category-group h4 {
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #eee;
+}
+
+.menu-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.menu-item {
+  display: flex;
+  padding: 15px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.menu-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.menu-item-info {
+  flex-grow: 1;
+}
+
+.menu-item h4 {
+  margin: 0 0 5px 0;
+}
+
+.menu-item-price {
+  color: #000;
+  font-weight: bold;
+}
+
+.menu-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 15px;
+}
+
+.menu-item-actions button {
+  padding: 6px 12px;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+
+.menu-item-actions button i {
+  margin-right: 5px;
+}
+
+.menu-item-actions button.edit {
+  color: #1976d2;
+}
+
+.menu-item-actions button.edit:hover {
+  background: #e3f2fd;
+}
+
+.menu-item-actions button.delete {
+  color: #d32f2f;
+}
+
+.menu-item-actions button.delete:hover {
+  background: #ffebee;
+}
+
+/* Add Item Form */
+.add-item-form {
+  background: #f9f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border: 1px solid #eee;
+}
+
+.add-item-form h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 15px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #000;
+  outline: none;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.form-actions button {
+  padding: 8px 16px;
+  margin-left: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.form-actions button:first-child {
+  background: none;
+  border: 1px solid #ddd;
+}
+
+.form-actions button:first-child:hover {
+  background: #f5f5f5;
+}
+
+.form-actions button:last-child {
+  background: #000;
+  color: white;
+  border: none;
+}
+
+.form-actions button:last-child:hover {
+  opacity: 0.9;
+}
+
+/* Restaurant Profile */
+#restaurant-profile-form .form-actions {
+  margin-top: 30px;
+}
+
+/* Empty States */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #aaa;
+  text-align: center;
+}
+
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 4px;
+  z-index: 10000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translate(-50%, 100px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.toast.fade-out {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Dark mode styles */
+body.dark-mode #restaurant-login-page,
+body.dark-mode #restaurant-dashboard {
+  background-color: #121212;
+  color: #f5f5f5;
+}
+
+body.dark-mode .restaurant-form {
+  background-color: #1e1e1e;
+  color: #f5f5f5;
+}
+
+body.dark-mode .tab-button {
+  color: #f5f5f5;
+}
+
+body.dark-mode .tab-button.active {
+  border-bottom-color: #f5f5f5;
+}
+
+body.dark-mode .switch-portal a {
+  color: #f5f5f5;
+}
+
+body.dark-mode .main-header {
+  background-color: #1e1e1e;
+}
+
+body.dark-mode .tab-container {
+  background-color: #1e1e1e;
+}
+
+body.dark-mode .tab-content h2 {
+  color: #f5f5f5;
+}
+
+body.dark-mode .filter-btn {
+  background: #2d2d2d;
+  border-color: #333;
+  color: #f5f5f5;
+}
+
+body.dark-mode .filter-btn.active {
+  background: #f5f5f5;
+  color: #000;
+}
+
+body.dark-mode .orders-list,
+body.dark-mode .menu-category {
+  border-color: #333;
+}
+
+body.dark-mode .order-item {
+  border-bottom-color: #333;
+}
+
+body.dark-mode .add-item-form {
+  background-color: #2d2d2d;
+  border-color: #333;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group select,
+body.dark-mode .form-group textarea {
+  background-color: #1e1e1e;
+  border-color: #333;
+  color: #f5f5f5;
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group select:focus,
+body.dark-mode .form-group textarea:focus {
+  border-color: #f5f5f5;
+}
+
+body.dark-mode .menu-item {
+  border-color: #333;
+  background-color: #2d2d2d;
+}
+
+body.dark-mode .menu-category-group h4 {
+  border-bottom-color: #333;
+  color: #f5f5f5;
+}
+
+body.dark-mode .form-actions button:first-child {
+  background: none;
+  border-color: #333;
+  color: #f5f5f5;
+}
+
+body.dark-mode .form-actions button:first-child:hover {
+  background: #333;
+}
+
+body.dark-mode .form-actions button:last-child {
+  background: #f5f5f5;
+  color: #000;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .restaurant-form {
+    max-width: 100%;
+    padding: 15px;
+  }
+  
+  .dashboard-container {
+    padding: 10px;
+  }
+  
+  .tabs {
+    flex-wrap: wrap;
+  }
+  
+  .tabs button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  
+  .menu-items {
+    grid-template-columns: 1fr;
+  }
+  
+  .menu-item {
+    flex-direction: column;
+  }
+  
+  .menu-item-actions {
+    flex-direction: row;
+    margin-top: 10px;
+    margin-left: 0;
+  }
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  margin-left: 10px;
+}
+
+.theme-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.theme-toggle i {
+  font-size: 20px;
+}
+
+body.dark-mode .theme-toggle i {
+  content: "\f185";
+} 
