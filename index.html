@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TastyGo - Food Delivery</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script src="https://kit.fontawesome.com/c24454ae7c.js" crossorigin="anonymous"></script>
   <!-- Load application scripts first -->
   <script src="env.js"></script>
   <script src="config.js"></script>
@@ -95,41 +95,41 @@
 <!-- Login Page -->
 <div id="login-page">
   <div class="form-container">
-    <h2>Welcome to TastyGo</h2>
+    <h2><i class="fas fa-utensils"></i> Welcome to TastyGo</h2>
     <form id="login-form" onsubmit="directLogin(event)">
-      <label for="username">Username</label> 
+      <label for="username"><i class="fas fa-user"></i> Username</label> 
       <input type="text" id="username" name="username" required>
 
-      <label for="password">Password</label>
+      <label for="password"><i class="fas fa-lock"></i> Password</label>
       <input type="password" id="password" name="password" required>
 
       <div class="remember-me">
         <input type="checkbox" id="remember-me" name="remember-me">
-        <label for="remember-me">Remember me</label>
+        <label for="remember-me"><i class="fas fa-check-circle"></i> Remember me</label>
       </div>
 
-      <button type="submit">Login</button>
-      <button type="button" onclick="showRegistrationPage()">Create Account</button>
+      <button type="submit"><i class="fas fa-sign-in-alt"></i> Login</button>
+      <button type="button" onclick="showRegistrationPage()"><i class="fas fa-user-plus"></i> Create Account</button>
     </form>
   </div>
 </div>
 
 <!-- Registration Page -->
 <div id="registration-page" class="form-container">
-  <h2>Create Account</h2>
+  <h2><i class="fas fa-user-plus"></i> Create Account</h2>
   <form id="registration-form" onsubmit="event.preventDefault(); registerUser();">
-    <label for="reg-username">Username</label>
+    <label for="reg-username"><i class="fas fa-user"></i> Username</label>
     <input type="text" id="reg-username" name="username" required>
 
-    <label for="reg-email">Email</label>
+    <label for="reg-email"><i class="fas fa-envelope"></i> Email</label>
     <input type="email" id="reg-email" name="email" required>
 
-    <label for="reg-password">Password</label>
+    <label for="reg-password"><i class="fas fa-lock"></i> Password</label>
     <input type="password" id="reg-password" name="password" required>
     <div id="password-strength" class="password-strength"></div>
 
-    <button type="submit">Register</button>
-    <button type="button" onclick="showLogin()">Back to Login</button>
+    <button type="submit"><i class="fas fa-user-check"></i> Register</button>
+    <button type="button" onclick="showLogin()"><i class="fas fa-arrow-left"></i> Back to Login</button>
   </form>
 </div>
 
@@ -172,7 +172,7 @@
   <!-- Hero Section -->
   <section class="hero-section">
     <div class="hero-content">
-      <h1>Feeling Hungry? TastyGo is here!</h1>
+      <h1><i class="fas fa-hamburger"></i> Feeling Hungry? TastyGo is here!</h1>
       <div class="search-container">
         <input type="text" id="search-bar" placeholder="Search for restaurants or cuisines">
         <button class="search-btn"><i class="fas fa-search"></i></button>
@@ -183,26 +183,26 @@
   <!-- Filters Section -->
   <div class="filters-section">
     <div class="filter-chips">
-      <button class="filter-chip active" onclick="filterRestaurants('All')">All</button>
-      <button class="filter-chip" onclick="filterRestaurants('Fast Food')">Fast Food</button>
-      <button class="filter-chip" onclick="filterRestaurants('Italian')">Italian</button>
-      <button class="filter-chip" onclick="filterRestaurants('Japanese')">Japanese</button>
-      <button class="filter-chip" onclick="filterRestaurants('Asian')">Asian</button>
-      <button class="filter-chip" onclick="filterRestaurants('American')">American</button>
+      <button class="filter-chip active" onclick="filterRestaurants('All')"><i class="fas fa-utensils"></i> All</button>
+      <button class="filter-chip" onclick="filterRestaurants('Fast Food')"><i class="fas fa-burger"></i> Fast Food</button>
+      <button class="filter-chip" onclick="filterRestaurants('Italian')"><i class="fas fa-pizza-slice"></i> Italian</button>
+      <button class="filter-chip" onclick="filterRestaurants('Japanese')"><i class="fas fa-fish"></i> Japanese</button>
+      <button class="filter-chip" onclick="filterRestaurants('Asian')"><i class="fas fa-bowl-rice"></i> Asian</button>
+      <button class="filter-chip" onclick="filterRestaurants('American')"><i class="fas fa-hotdog"></i> American</button>
     </div>
     <div class="sort-options">
       <select onchange="sortRestaurants(this.value)">
-        <option value="rating">Sort by Rating</option>
-        <option value="deliveryTime">Sort by Delivery Time</option>
-        <option value="price">Sort by Price</option>
+        <option value="rating"><i class="fas fa-star"></i> Sort by Rating</option>
+        <option value="deliveryTime"><i class="fas fa-clock"></i> Sort by Delivery Time</option>
+        <option value="price"><i class="fas fa-dollar-sign"></i> Sort by Price</option>
       </select>
     </div>
   </div>
 
   <!-- Tab navigation -->
   <div class="tabs">
-    <button id="restaurants-tab" class="active" onclick="showTabLocal('restaurants')">Restaurants</button>
-    <button id="favorites-tab" onclick="showTabLocal('favorites')">Favorites</button>
+    <button id="restaurants-tab" class="active" onclick="showTabLocal('restaurants')"><i class="fas fa-store"></i> Restaurants</button>
+    <button id="favorites-tab" onclick="showTabLocal('favorites')"><i class="fas fa-heart"></i> Favorites</button>
   </div>
 
   <!-- Restaurant Listings -->
@@ -212,12 +212,12 @@
 
   <!-- Address Management -->
   <section id="addresses" class="tab-content">
-    <h2>Manage Addresses</h2>
+    <h2><i class="fas fa-map-marked-alt"></i> Manage Addresses</h2>
     <div class="address-management">
     <form id="address-form" onsubmit="event.preventDefault(); addAddress();">
       <div class="add-address-container">
         <input type="text" id="address" placeholder="Enter your delivery address" required>
-          <button type="submit" id="add-address-btn" class="button-85" role="button">Add Address</button>
+          <button type="submit" id="add-address-btn" class="button-85" role="button"><i class="fas fa-plus-circle"></i> Add Address</button>
       </div>
     </form>
       <div id="map" style="height: 400px; width: 100%; margin: 20px 0; border-radius: 8px;"></div>
@@ -228,11 +228,11 @@
   <!-- Orders Section -->
   <section id="orders" class="tab-content">
     <div class="orders-container">
-      <h2>Your Orders</h2>
+      <h2><i class="fas fa-receipt"></i> Your Orders</h2>
       <div class="order-filters">
-        <button class="filter-btn active" onclick="filterOrders('all')">All Orders</button>
-        <button class="filter-btn" onclick="filterOrders('active')">Active Orders</button>
-        <button class="filter-btn" onclick="filterOrders('past')">Past Orders</button>
+        <button class="filter-btn active" onclick="filterOrders('all')"><i class="fas fa-list-ul"></i> All Orders</button>
+        <button class="filter-btn" onclick="filterOrders('active')"><i class="fas fa-spinner"></i> Active Orders</button>
+        <button class="filter-btn" onclick="filterOrders('past')"><i class="fas fa-history"></i> Past Orders</button>
       </div>
       <div id="active-orders"></div>
       <div id="order-history"></div>
@@ -242,7 +242,7 @@
   <!-- Favorites Section -->
   <section id="favorites" class="tab-content">
     <div class="favorites-container">
-      <h2>Your Favorite Restaurants</h2>
+      <h2><i class="fas fa-heart"></i> Your Favorite Restaurants</h2>
       <div id="favorites-list" class="restaurant-list"></div>
     </div>
   </section>
@@ -251,40 +251,40 @@
   <div id="checkout-modal" class="checkout-modal" style="display: none;">
     <div class="checkout-content">
       <div class="checkout-header">
-        <h2>Checkout</h2>
+        <h2><i class="fas fa-shopping-bag"></i> Checkout</h2>
         <button onclick="closeCheckout()" class="close-checkout-btn">&times;</button>
       </div>
       <div class="checkout-body">
         <div class="delivery-info">
-          <h3>Delivery Details</h3>
+          <h3><i class="fas fa-truck"></i> Delivery Details</h3>
           <p id="checkout-address"></p>
           <p id="estimated-time"></p>
         </div>
         <div class="order-summary">
-          <h3>Order Summary</h3>
+          <h3><i class="fas fa-receipt"></i> Order Summary</h3>
           <div id="checkout-items"></div>
         </div>
         <div class="promo-code">
-          <h3>Promo Code</h3>
+          <h3><i class="fas fa-tags"></i> Promo Code</h3>
           <div class="promo-input">
             <input type="text" id="promo-code" placeholder="Enter promo code">
-            <button onclick="applyPromoCode()">Apply</button>
+            <button onclick="applyPromoCode()"><i class="fas fa-check"></i> Apply</button>
           </div>
         </div>
         <div class="special-instructions">
-          <h3>Special Instructions</h3>
+          <h3><i class="fas fa-clipboard-list"></i> Special Instructions</h3>
           <textarea id="order-instructions" placeholder="Add any special instructions for your order..."></textarea>
         </div>
         <div class="payment-section">
-          <h3>Payment Method</h3>
+          <h3><i class="fas fa-credit-card"></i> Payment Method</h3>
           <div class="payment-options">
             <label class="payment-option">
               <input type="radio" name="payment" value="card" checked>
-              Credit/Debit Card
+              <i class="far fa-credit-card"></i> Credit/Debit Card
             </label>
             <label class="payment-option">
               <input type="radio" name="payment" value="cash">
-              Cash on Delivery
+              <i class="fas fa-money-bill-wave"></i> Cash on Delivery
             </label>
           </div>
           <div id="card-details">
@@ -295,7 +295,7 @@
             </div>
           </div>
         </div>
-        <button onclick="processOrder()" class="place-order-btn">Place Order</button>
+        <button onclick="processOrder()" class="place-order-btn"><i class="fas fa-check-circle"></i> Place Order</button>
       </div>
     </div>
   </div>
@@ -304,41 +304,41 @@
   <div id="tracking-modal" class="tracking-modal" style="display: none;">
     <div class="tracking-content">
       <div class="tracking-header">
-        <h2>Track Your Order</h2>
+        <h2><i class="fas fa-route"></i> Track Your Order</h2>
         <button onclick="closeTracking()" class="close-tracking-btn">&times;</button>
       </div>
       <div class="tracking-body">
         <div class="tracking-status">
           <div class="status-steps">
             <div class="status-step active">
-              <div class="step-icon">✓</div>
+              <div class="step-icon"><i class="fas fa-check-circle"></i></div>
               <div class="step-text">Order Confirmed</div>
             </div>
             <div class="status-step">
-              <div class="step-icon">🍳</div>
+              <div class="step-icon"><i class="fas fa-utensils"></i></div>
               <div class="step-text">Preparing</div>
             </div>
             <div class="status-step">
-              <div class="step-icon">🚗</div>
+              <div class="step-icon"><i class="fas fa-motorcycle"></i></div>
               <div class="step-text">On the Way</div>
             </div>
             <div class="status-step">
-              <div class="step-icon">📍</div>
+              <div class="step-icon"><i class="fas fa-home"></i></div>
               <div class="step-text">Delivered</div>
             </div>
           </div>
         </div>
         <div class="delivery-details">
           <div class="estimated-time">
-            <h3>Estimated Delivery Time</h3>
+            <h3><i class="fas fa-clock"></i> Estimated Delivery Time</h3>
             <p id="tracking-eta">Calculating...</p>
           </div>
           <div class="delivery-address">
-            <h3>Delivery Address</h3>
+            <h3><i class="fas fa-map-marker-alt"></i> Delivery Address</h3>
             <p id="tracking-address"></p>
           </div>
           <div class="order-details">
-            <h3>Order Details</h3>
+            <h3><i class="fas fa-clipboard-check"></i> Order Details</h3>
             <div id="tracking-items"></div>
           </div>
         </div>
@@ -348,7 +348,13 @@
 </div>
 
 <footer>
-  <p>&copy; 2025 Food Application</p>
+  <p><i class="fas fa-copyright"></i> 2025 TastyGo Food Delivery | <i class="fas fa-envelope"></i> support@tastygo.com | <i class="fas fa-phone"></i> (555) 123-4567</p>
+  <div class="social-links">
+    <a href="#"><i class="fab fa-facebook"></i></a>
+    <a href="#"><i class="fab fa-twitter"></i></a>
+    <a href="#"><i class="fab fa-instagram"></i></a>
+    <a href="#"><i class="fab fa-tiktok"></i></a>
+  </div>
 </footer>
 
 <!-- GitHub Pages Notice -->
