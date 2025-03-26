@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TastyGo - Restaurant Owner Portal</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="restaurant-owner.css">
+  <script src="https://kit.fontawesome.com/c24454ae7c.js" crossorigin="anonymous"></script>
+  <script src="restaurant-owner.js" defer></script>
+</head>
+<body>
+  <!-- Restaurant Owner Login Page -->
+  <div id="restaurant-login-page">
+    <div class="form-container restaurant-form">
+      <h2><i class="fas fa-utensils"></i> Restaurant Owner Portal</h2>
+      <div class="tab-buttons">
+        <button class="tab-button active" onclick="showLoginTab()">Login</button>
+        <button class="tab-button" onclick="showSignupTab()">Signup</button>
+      </div>
+      
+      <!-- Login Form -->
+      <form id="restaurant-login-form" class="tab-content active">
+        <label for="restaurant-username"><i class="fas fa-user"></i> Username</label> 
+        <input type="text" id="restaurant-username" name="username" required>
+
+        <label for="restaurant-password"><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="restaurant-password" name="password" required>
+
+        <div class="remember-me">
+          <input type="checkbox" id="restaurant-remember-me" name="remember-me">
+          <label for="restaurant-remember-me"><i class="fas fa-check-circle"></i> Remember me</label>
+        </div>
+
+        <button type="button" onclick="loginRestaurantOwner()"><i class="fas fa-sign-in-alt"></i> Login</button>
+        <p class="switch-portal">
+          <a href="index.html">Switch to Customer Portal</a>
+        </p>
+      </form>
+      
+      <!-- Signup Form -->
+      <form id="restaurant-signup-form" class="tab-content">
+        <div class="required-field">
+          <label for="signup-username"><i class="fas fa-user"></i> Username*</label>
+          <input type="text" id="signup-username" name="username" required>
+        </div>
+
+        <div class="required-field">
+          <label for="signup-password"><i class="fas fa-lock"></i> Password*</label>
+          <input type="password" id="signup-password" name="password" required>
+        </div>
+        
+        <label for="restaurant-name"><i class="fas fa-store"></i> Restaurant Name</label>
+        <input type="text" id="restaurant-name" name="restaurantName">
+        
+        <label for="restaurant-cuisine"><i class="fas fa-utensils"></i> Cuisine Type</label>
+        <select id="restaurant-cuisine" name="cuisine">
+          <option value="">Select Cuisine Type</option>
+          <option value="Fast Food">Fast Food</option>
+          <option value="Italian">Italian</option>
+          <option value="Chinese">Chinese</option>
+          <option value="Japanese">Japanese</option>
+          <option value="Mexican">Mexican</option>
+          <option value="Indian">Indian</option>
+          <option value="Thai">Thai</option>
+          <option value="Mediterranean">Mediterranean</option>
+          <option value="American">American</option>
+          <option value="Korean">Korean</option>
+          <option value="Vegan">Vegan</option>
+          <option value="Healthy">Healthy</option>
+          <option value="Desserts">Desserts</option>
+          <option value="Breakfast">Breakfast</option>
+          <option value="Other">Other</option>
+        </select>
+        
+        <label for="restaurant-address"><i class="fas fa-map-marker-alt"></i> Address</label>
+        <input type="text" id="restaurant-address" name="address">
+        
+        <label for="restaurant-phone"><i class="fas fa-phone"></i> Phone Number</label>
+        <input type="tel" id="restaurant-phone" name="phone">
+        
+        <label for="restaurant-email"><i class="fas fa-envelope"></i> Email</label>
+        <input type="email" id="restaurant-email" name="email">
+        
+        <label for="restaurant-description"><i class="fas fa-info-circle"></i> Description</label>
+        <textarea id="restaurant-description" name="description" rows="3"></textarea>
+        
+        <button type="button" onclick="registerRestaurantOwner()"><i class="fas fa-user-plus"></i> Create Account</button>
+        <p class="switch-portal">
+          <a href="index.html">Switch to Customer Portal</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Restaurant Owner Dashboard -->
+  <div id="restaurant-dashboard" style="display:none;">
+    <header class="main-header">
+      <div class="header-content">
+        <h1>TastyGo - Restaurant Portal</h1>
+        <div class="restaurant-name">
+          <i class="fas fa-store"></i>
+          <span id="dashboard-restaurant-name">Restaurant Name</span>
+        </div>
+        <div class="header-actions">
+          <div class="settings-dropdown">
+            <button id="restaurant-settings-btn">
+              <i class="fas fa-cog"></i>
+            </button>
+            <div class="settings-content">
+              <button onclick="showRestaurantTab('profile')">Profile</button>
+              <button onclick="showRestaurantTab('menu')">Menu</button>
+              <button onclick="showRestaurantTab('orders')">Orders</button>
+              <button onclick="logoutRestaurantOwner()">Logout</button>
+            </div>
+          </div>
+          <button id="theme-toggle" class="theme-toggle" onclick="toggleDarkMode()">
+            <i class="fas fa-moon"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-container">
+      <!-- Tabs Navigation -->
+      <div class="tabs">
+        <button id="orders-tab" class="active" onclick="showRestaurantTab('orders')">
+          <i class="fas fa-clipboard-list"></i> Orders
+        </button>
+        <button id="menu-tab" onclick="showRestaurantTab('menu')">
+          <i class="fas fa-utensils"></i> Menu Management
+        </button>
+        <button id="profile-tab" onclick="showRestaurantTab('profile')">
+          <i class="fas fa-user-cog"></i> Restaurant Profile
+        </button>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-container">
+        <!-- Orders Tab -->
+        <div id="orders" class="tab-content active">
+          <h2>Order Management</h2>
+          <div class="order-filters">
+            <button class="filter-btn active" onclick="filterRestaurantOrders('all')">All Orders</button>
+            <button class="filter-btn" onclick="filterRestaurantOrders('pending')">Pending</button>
+            <button class="filter-btn" onclick="filterRestaurantOrders('confirmed')">Confirmed</button>
+            <button class="filter-btn" onclick="filterRestaurantOrders('completed')">Completed</button>
+          </div>
+          <div class="orders-list" id="restaurant-orders-list">
+            <div class="empty-state">
+              <i class="fas fa-clipboard-list"></i>
+              <p>No orders yet</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Menu Management Tab -->
+        <div id="menu" class="tab-content">
+          <h2>Menu Management</h2>
+          <div class="menu-actions">
+            <button class="add-item-btn" onclick="showAddItemForm()">
+              <i class="fas fa-plus"></i> Add Menu Item
+            </button>
+          </div>
+          <div class="menu-categories">
+            <h3>Menu Categories</h3>
+            <div class="menu-category" id="menu-categories-list">
+              <div class="empty-state">
+                <i class="fas fa-utensils"></i>
+                <p>No menu items yet</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Add Menu Item Form (initially hidden) -->
+          <div class="add-item-form" id="add-item-form" style="display:none;">
+            <h3>Add New Menu Item</h3>
+            <form id="menu-item-form">
+              <div class="form-group">
+                <label for="item-name">Item Name*</label>
+                <input type="text" id="item-name" required>
+              </div>
+              <div class="form-group">
+                <label for="item-description">Description</label>
+                <textarea id="item-description" rows="2"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="item-price">Price*</label>
+                <input type="number" id="item-price" min="0" step="0.01" required>
+              </div>
+              <div class="form-group">
+                <label for="item-category">Category</label>
+                <select id="item-category">
+                  <option value="Popular Items">Popular Items</option>
+                  <option value="Appetizers">Appetizers</option>
+                  <option value="Main Course">Main Course</option>
+                  <option value="Sides">Sides</option>
+                  <option value="Desserts">Desserts</option>
+                  <option value="Beverages">Beverages</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="item-image">Image URL</label>
+                <input type="text" id="item-image" placeholder="https://example.com/image.jpg">
+              </div>
+              <div class="form-actions">
+                <button type="button" onclick="cancelAddItem()">Cancel</button>
+                <button type="button" onclick="saveMenuItem()">Save Item</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Restaurant Profile Tab -->
+        <div id="profile" class="tab-content">
+          <h2>Restaurant Profile</h2>
+          <form id="restaurant-profile-form">
+            <div class="form-group">
+              <label for="profile-restaurant-name">Restaurant Name</label>
+              <input type="text" id="profile-restaurant-name">
+            </div>
+            <div class="form-group">
+              <label for="profile-cuisine">Cuisine Type</label>
+              <select id="profile-cuisine">
+                <option value="">Select Cuisine Type</option>
+                <option value="Fast Food">Fast Food</option>
+                <option value="Italian">Italian</option>
+                <option value="Chinese">Chinese</option>
+                <option value="Japanese">Japanese</option>
+                <option value="Mexican">Mexican</option>
+                <option value="Indian">Indian</option>
+                <option value="Thai">Thai</option>
+                <option value="Mediterranean">Mediterranean</option>
+                <option value="American">American</option>
+                <option value="Korean">Korean</option>
+                <option value="Vegan">Vegan</option>
+                <option value="Healthy">Healthy</option>
+                <option value="Desserts">Desserts</option>
+                <option value="Breakfast">Breakfast</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="profile-address">Address</label>
+              <input type="text" id="profile-address">
+            </div>
+            <div class="form-group">
+              <label for="profile-phone">Phone Number</label>
+              <input type="tel" id="profile-phone">
+            </div>
+            <div class="form-group">
+              <label for="profile-email">Email</label>
+              <input type="email" id="profile-email">
+            </div>
+            <div class="form-group">
+              <label for="profile-description">Description</label>
+              <textarea id="profile-description" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="profile-delivery-fee">Delivery Fee ($)</label>
+              <input type="number" id="profile-delivery-fee" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label for="profile-delivery-time">Delivery Time (e.g., 15-25 min)</label>
+              <input type="text" id="profile-delivery-time">
+            </div>
+            <div class="form-group">
+              <label for="profile-logo">Logo URL</label>
+              <input type="text" id="profile-logo" placeholder="https://example.com/logo.png">
+            </div>
+            <div class="form-actions">
+              <button type="button" onclick="saveRestaurantProfile()">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html> 
